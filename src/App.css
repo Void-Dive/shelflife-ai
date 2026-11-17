@@ -225,3 +225,104 @@
     margin: 0 18px;
   }
 }
+
+
+/* SLAI-8: Manual Add Food form */
+
+.add-food-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.add-food-form h2 {
+  color: #174c39;
+  font-size: 20px;
+  margin: 0 0 14px;
+}
+
+.add-food-form label {
+  color: #66736b;
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+.add-food-form input,
+.add-food-form select {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px;
+  border: 1px solid #dbe7d5;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #29362e;
+  font: inherit;
+}
+
+.add-food-form input:focus,
+.add-food-form select:focus {
+  outline: 2px solid #174c39;
+  outline-offset: 2px;
+}
+
+.add-food-form input[aria-invalid="true"],
+.add-food-form select[aria-invalid="true"] {
+  border-color: #d64545;
+}
+
+.field-error {
+  color: #b42318;
+  font-size: 13px;
+  margin: 0;
+}
+
+.add-food-form .primary-button {
+  margin-top: 24px;
+  cursor: pointer;
+}
+
+.add-food-form .primary-button:hover {
+  background: #103b2d;
+}
+
+.cancel-button {
+  border: none;
+  background: transparent;
+  color: #66736b;
+  padding: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cancel-button:hover {
+  color: #174c39;
+}
+
+/* Bottom navigation for Inventory and Add Food */
+
+.bottom-nav button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: #66736b;
+  font: inherit;
+  font-size: 12px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.bottom-nav button.active-tab {
+  color: #174c39;
+  font-weight: 700;
+}
+
+.bottom-nav button:focus-visible,
+.cancel-button:focus-visible,
+.add-food-form .primary-button:focus-visible {
+  outline: 3px solid #ed783f;
+  outline-offset: 3px;
+}
