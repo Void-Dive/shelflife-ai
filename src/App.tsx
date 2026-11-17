@@ -1,121 +1,128 @@
+
 import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import type { FoodItemInput } from './models/foodItem'
 import './App.css'
 
+const sampleItems: FoodItemInput[] = [
+  {
+    name: 'Milk',
+    storageLocation: 'Fridge',
+    dateKind: 'Best by',
+    recordedDate: '2026-11-15',
+    quantity: 1,
+  },
+  {
+    name: 'Spinach',
+    storageLocation: 'Fridge',
+    dateKind: 'Use by',
+    recordedDate: '2026-11-20',
+    quantity: 1,
+  },
+]
+
+function formatDate(date: string): string {
+  return new Date(`${date}T12:00:00`).toLocaleDateString(
+    'en-US',
+    {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    }
+  )
+}
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [showEmpty, setShowEmpty] = useState(false)
+  const items = showEmpty ? [] : sampleItems
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app-shell">
+      <header className="app-header">
+        <span className="brand">ShelfLife AI</span>
+        <h1>Inventory</h1>
+      </header>
 
-      <div className="ticks"></div>
+      <main className="app-content">
+        <div className="inventory-heading">
+          <div>
+            <h2>Your food at a glance</h2>
+            <p className="inventory-count" aria-live="polite">
+              {items.length} sample items
+            </p>
+          </div>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
+          <button
+            className="preview-toggle"
+            type="button"
+            onClick={() => setShowEmpty(!showEmpty)}
+            aria-pressed={showEmpty}
+          >
+            {showEmpty ? 'Show sample items' : 'Preview empty state'}
+          </button>
+        </div>
+
+        {items.length === 0 ? (
+          <section className="empty-state">
+            <div className="empty-icon" aria-hidden="true">
+              🥬
+            </div>
+            <h3>Your inventory is empty</h3>
+            <p>
+              Food items you save will appear here,
+              along with their recorded dates.
+            </p>
+          </section>
+        ) : (
+          <ul className="inventory-grid">
+            {items.map((item) => (
+              <li
+                className="food-card"
+                key={`${item.name}-${item.recordedDate}`}
+              >
+                <div className="food-icon" aria-hidden="true">
+                  ●
+                </div>
+
+                <div className="food-details">
+                  <h3>{item.name}</h3>
+                  <p>
+                    {item.dateKind} {formatDate(item.recordedDate)}
+                  </p>
+                </div>
+
+                <span className="sample-badge">
+                  Demo
+                </span>
+              </li>
+            ))}
           </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        )}
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        <div className="inventory-actions">
+          <button className="primary-button" disabled>
+            + Add food
+          </button>
+
+          <button className="secondary-button" disabled>
+            Scan a date
+          </button>
+        </div>
+
+        <p className="development-note">
+          Dashboard preview: adding food and scanning
+          will be implemented in later tasks.
+        </p>
+      </main>
+
+      <nav className="bottom-nav" aria-label="App sections">
+        <span className="active-tab" aria-current="page">
+          Home
+        </span>
+        <span>Add</span>
+        <span>Scan</span>
+        <span>Soon</span>
+      </nav>
+    </div>
   )
 }
 
