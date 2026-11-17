@@ -73,3 +73,38 @@ export default defineConfig([
 ])
 
 ```
+
+## Food Item Model — SLAI-6
+
+ShelfLife AI uses Zod to validate food inventory records.
+
+### Fields
+
+| Field | Type | Validation |
+|---|---|---|
+| name | string | Required, trimmed, 1–100 characters |
+| storageLocation | string | Optional: Fridge, Freezer, Pantry |
+| dateKind | string | Expiration, Best by, Use by, Unknown |
+| recordedDate | string | Valid ISO calendar date (YYYY-MM-DD) |
+| quantity | number | Positive whole number |
+
+Stored records additionally include:
+- id
+- ownerId
+- createdAt
+- updatedAt
+
+### Validation Tests
+
+Run:
+
+node --test tests/foodItem.test.ts
+
+Results:
+- 5 valid inputs accepted
+- 5 invalid inputs rejected
+- 10 tests passed
+- 0 tests failed
+
+Validation is implemented in src/models/foodItem.ts.
+Tests are located in tests/foodItem.test.ts.
