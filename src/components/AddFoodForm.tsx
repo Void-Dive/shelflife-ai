@@ -6,7 +6,7 @@ import {
 } from '../models/foodItem'
 
 type Props = {
-  onSave: (item: FoodItemInput) => void
+  onSave: (item: FoodItemInput) => void | Promise<void>
   onCancel: () => void
 }
 
@@ -30,6 +30,8 @@ export default function AddFoodForm({
     initialValues
   )
   const [errors, setErrors] = useState<FieldErrors>({})
+  const [saveError, setSaveError] = useState('')
+  const [saving, setSaving] = useState(false)
 
   function update<K extends keyof FoodItemInput>(
     field: K,
@@ -44,10 +46,18 @@ export default function AddFoodForm({
       ...previous,
       [field]: undefined,
     }))
+
+    setSaveError('')
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>
+  ) {
     event.preventDefault()
+
+    if (saving) return
+
+    setSaveError('')
 
     const result = foodItemSchema.safeParse(form)
 
@@ -67,7 +77,19 @@ export default function AddFoodForm({
     }
 
     setErrors({})
-    onSave(result.data)
+    setSaving(true)
+
+    try {
+      await onSave(result.data)
+    } catch (cause) {
+      setSaveError(
+        cause instanceof Error
+          ? cause.message
+          : 'Could not save the item. Please try again.'
+      )
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -102,8 +124,7 @@ export default function AddFoodForm({
         onChange={(event) =>
           update(
             'storageLocation',
-            event.target.value as
-              FoodItemInput['storageLocation']
+            event.target.value as FoodItemInput['storageLocation']
           )
         }
       >
@@ -165,14 +186,25 @@ export default function AddFoodForm({
         </p>
       )}
 
-      <button className="primary-button" type="submit">
-        Save item
+      {saveError && (
+        <p className="field-error" role="alert">
+          {saveError}
+        </p>
+      )}
+
+      <button
+        className="primary-button"
+        type="submit"
+        disabled={saving}
+      >
+        {saving ? 'Saving...' : 'Save item'}
       </button>
 
       <button
         className="cancel-button"
         type="button"
         onClick={onCancel}
+        disabled={saving}
       >
         Cancel
       </button>

@@ -1,25 +1,15 @@
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import AddFoodForm from './components/AddFoodForm'
-import type { FoodItemInput } from './models/foodItem'
+import AuthForm from './components/AuthForm'
+import { loadFoodItems, saveFoodItem } from './lib/foodItems'
+import { supabase } from './lib/supabase'
+import type {
+  FoodItemInput,
+  FoodItemRecord,
+} from './models/foodItem'
 import './App.css'
-
-const sampleItems: FoodItemInput[] = [
-  {
-    name: 'Milk',
-    storageLocation: 'Fridge',
-    dateKind: 'Best by',
-    recordedDate: '2026-11-15',
-    quantity: 1,
-  },
-  {
-    name: 'Spinach',
-    storageLocation: 'Fridge',
-    dateKind: 'Use by',
-    recordedDate: '2026-11-20',
-    quantity: 1,
-  },
-]
 
 function formatDate(date: string): string {
   return new Date(`${date}T12:00:00`).toLocaleDateString(
@@ -32,35 +22,103 @@ function formatDate(date: string): string {
   )
 }
 
-function App() {
-  const [items, setItems] = useState<FoodItemInput[]>(sampleItems)
-  const [showEmpty, setShowEmpty] = useState(false)
-  const [page, setPage] = useState<'inventory' | 'add'>('inventory')
+function InventoryApp() {
+  const [items, setItems] = useState<FoodItemRecord[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
+  const [signOutError, setSignOutError] = useState('')
+  const [page, setPage] =
+    useState<'inventory' | 'add'>('inventory')
 
-  const visibleItems = showEmpty ? [] : items
+  useEffect(() => {
+    let cancelled = false
 
-  function handleSave(item: FoodItemInput) {
-    setItems((previous) => [...previous, item])
-    setShowEmpty(false)
-    setPage('inventory')
+    loadFoodItems()
+      .then((loaded) => {
+        if (!cancelled) setItems(loaded)
+      })
+      .catch((cause) => {
+        if (!cancelled) {
+          setLoadError(
+            cause instanceof Error
+              ? cause.message
+              : 'Could not load inventory.'
+          )
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  async function refreshItems() {
+    setLoading(true)
+    setLoadError('')
+
+    try {
+      const loaded = await loadFoodItems()
+      setItems(loaded)
+    } catch (cause) {
+      setLoadError(
+        cause instanceof Error
+          ? cause.message
+          : 'Could not load inventory.'
+      )
+    } finally {
+      setLoading(false)
+    }
   }
 
-  function handleCancel() {
+  async function handleSave(item: FoodItemInput) {
+    // A failed save throws and keeps the Add Food form open.
+    await saveFoodItem(item)
+
+    // Only leave the form after the database accepts the item.
     setPage('inventory')
+    void refreshItems()
+  }
+
+  async function handleSignOut() {
+    setSignOutError('')
+
+    const { error } = await supabase.auth.signOut()
+
+    if (error) {
+      setSignOutError(error.message)
+    }
   }
 
   return (
     <div className="app-shell">
       <header className="app-header">
-        <span className="brand">ShelfLife AI</span>
+        <div className="header-top">
+          <span className="brand">ShelfLife AI</span>
+          <button
+            className="sign-out-button"
+            type="button"
+            onClick={handleSignOut}
+          >
+            Sign out
+          </button>
+        </div>
         <h1>{page === 'add' ? 'Add food' : 'Inventory'}</h1>
       </header>
 
       <main className="app-content">
+        {signOutError && (
+          <p className="field-error" role="alert">
+            {signOutError}
+          </p>
+        )}
+
         {page === 'add' ? (
           <AddFoodForm
             onSave={handleSave}
-            onCancel={handleCancel}
+            onCancel={() => setPage('inventory')}
           />
         ) : (
           <>
@@ -68,22 +126,31 @@ function App() {
               <div>
                 <h2>Your food at a glance</h2>
                 <p className="inventory-count" aria-live="polite">
-                  {visibleItems.length} items
+                  {loading
+                    ? 'Loading...'
+                    : `${items.length} ${
+                        items.length === 1 ? 'item' : 'items'
+                      }`}
                 </p>
               </div>
-
-              <button
-                className="preview-toggle"
-                type="button"
-                onClick={() => setShowEmpty(!showEmpty)}
-              >
-                {showEmpty
-                  ? 'Show inventory'
-                  : 'Preview empty state'}
-              </button>
             </div>
 
-            {visibleItems.length === 0 ? (
+            {loading ? (
+              <p role="status">Loading inventory...</p>
+            ) : loadError ? (
+              <section>
+                <p className="field-error" role="alert">
+                  {loadError}
+                </p>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => void refreshItems()}
+                >
+                  Retry loading
+                </button>
+              </section>
+            ) : items.length === 0 ? (
               <section className="empty-state">
                 <div className="empty-icon" aria-hidden="true">
                   🥬
@@ -96,8 +163,8 @@ function App() {
               </section>
             ) : (
               <ul className="inventory-grid">
-                {visibleItems.map((item, index) => (
-                  <li className="food-card" key={index}>
+                {items.map((item) => (
+                  <li className="food-card" key={item.id}>
                     <div className="food-icon" aria-hidden="true">
                       ●
                     </div>
@@ -111,7 +178,10 @@ function App() {
                     </div>
 
                     <span className="sample-badge">
-                      {item.quantity} {item.quantity === 1 ? 'item' : 'items'}
+                      {item.quantity}{' '}
+                      {item.quantity === 1
+                        ? 'item'
+                        : 'items'}
                     </span>
                   </li>
                 ))}
@@ -137,8 +207,8 @@ function App() {
             </div>
 
             <p className="development-note">
-              Inventory is stored in memory for this
-              development preview.
+              Inventory is saved to Supabase for your
+              signed-in account.
             </p>
           </>
         )}
@@ -149,7 +219,6 @@ function App() {
           type="button"
           className={page === 'inventory' ? 'active-tab' : ''}
           onClick={() => setPage('inventory')}
-          aria-current={page === 'inventory' ? 'page' : undefined}
         >
           Home
         </button>
@@ -158,7 +227,6 @@ function App() {
           type="button"
           className={page === 'add' ? 'active-tab' : ''}
           onClick={() => setPage('add')}
-          aria-current={page === 'add' ? 'page' : undefined}
         >
           Add
         </button>
@@ -168,6 +236,70 @@ function App() {
       </nav>
     </div>
   )
+}
+
+function App() {
+  const [session, setSession] = useState<Session | null>(null)
+  const [checkingAuth, setCheckingAuth] = useState(true)
+
+  useEffect(() => {
+    let active = true
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
+      (_event, nextSession) => {
+        if (!active) return
+
+        setSession(nextSession)
+        setCheckingAuth(false)
+      }
+    )
+
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!active) return
+
+        setSession(data.session)
+        setCheckingAuth(false)
+      })
+      .catch(() => {
+        if (active) setCheckingAuth(false)
+      })
+
+    return () => {
+      active = false
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  if (checkingAuth) {
+    return (
+      <div className="app-shell">
+        <main className="app-content">
+          <p>Checking your session...</p>
+        </main>
+      </div>
+    )
+  }
+
+  if (!session) {
+    return (
+      <div className="app-shell">
+        <header className="app-header">
+          <span className="brand">ShelfLife AI</span>
+          <h1>Welcome</h1>
+        </header>
+
+        <main className="app-content">
+          <AuthForm />
+        </main>
+      </div>
+    )
+  }
+
+  return <InventoryApp key={session.user.id} />
 }
 
 export default App

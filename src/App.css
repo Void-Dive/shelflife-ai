@@ -326,3 +326,99 @@
   outline: 3px solid #ed783f;
   outline-offset: 3px;
 }
+
+/* SLAI-9: Authentication screen */
+
+.auth-form {
+  width: 100%;
+  max-width: 460px;
+  margin: 40px auto;
+}
+
+.auth-form h2 {
+  color: #174c39;
+  font-size: 24px;
+  margin: 0 0 8px;
+}
+
+.auth-form > p {
+  color: #66736b;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.auth-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.auth-form label {
+  color: #66736b;
+  font-size: 14px;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+.auth-form input {
+  width: 100%;
+  min-height: 46px;
+  padding: 12px;
+  border: 1px solid #dbe7d5;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #29362e;
+  font: inherit;
+}
+
+.auth-form input:focus-visible {
+  outline: 2px solid #174c39;
+  outline-offset: 2px;
+}
+
+.auth-form .primary-button {
+  margin-top: 20px;
+  cursor: pointer;
+}
+
+.auth-form .primary-button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.auth-form .cancel-button {
+  display: block;
+  margin: 16px auto 0;
+}
+
+.auth-form [role="status"] {
+  color: #174c39;
+  font-size: 14px;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.sign-out-button {
+  background: transparent;
+  border: 1px solid #ffffff;
+  border-radius: 8px;
+  color: #ffffff;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.sign-out-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.sign-out-button:focus-visible {
+  outline: 3px solid #ed783f;
+  outline-offset: 3px;
+}
