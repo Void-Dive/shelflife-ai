@@ -8,6 +8,7 @@ import {
 type Props = {
   onSave: (item: FoodItemInput) => void | Promise<void>
   onCancel: () => void
+  initialItem?: FoodItemInput
 }
 
 type FieldErrors = Partial<
@@ -25,9 +26,10 @@ const initialValues: FoodItemInput = {
 export default function AddFoodForm({
   onSave,
   onCancel,
+  initialItem,
 }: Props) {
   const [form, setForm] = useState<FoodItemInput>(
-    initialValues
+    initialItem ?? initialValues
   )
   const [errors, setErrors] = useState<FieldErrors>({})
   const [saveError, setSaveError] = useState('')
@@ -98,7 +100,9 @@ export default function AddFoodForm({
       onSubmit={handleSubmit}
       noValidate
     >
-      <h2>Enter item details</h2>
+      <h2>
+        {initialItem ? 'Edit item details' : 'Enter item details'}
+      </h2>
 
       <label htmlFor="food-name">Food name *</label>
       <input
@@ -197,7 +201,12 @@ export default function AddFoodForm({
         type="submit"
         disabled={saving}
       >
-        {saving ? 'Saving...' : 'Save item'}
+        {saving
+          ? 'Saving...'
+          : initialItem
+            ? 'Save changes'
+            : 'Save item'}
+
       </button>
 
       <button

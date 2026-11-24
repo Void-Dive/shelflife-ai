@@ -61,3 +61,42 @@ export async function saveFoodItem(
     throw new Error(`Could not save food: ${error.message}`)
   }
 }
+
+
+export async function updateFoodItem(
+  id: string,
+  item: FoodItemInput
+): Promise<void> {
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+
+  if (authError || !user) {
+    throw new Error('Please sign in again to edit food.')
+  }
+
+  const { data, error } = await supabase
+    .from('food_items')
+    .update({
+      name: item.name,
+      storage_location: item.storageLocation ?? null,
+      date_kind: item.dateKind,
+      recorded_date: item.recordedDate,
+      quantity: item.quantity,
+    })
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .select('id')
+    .maybeSingle()
+
+  if (error) {
+    throw new Error(`Could not update food: ${error.message}`)
+  }
+
+  if (!data) {
+    throw new Error(
+      'Food item not found or you do not have permission to edit it.'
+    )
+  }
+}

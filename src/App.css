@@ -129,6 +129,30 @@
   font-weight: 700;
 }
 
+/* SLAI-14: Edit existing inventory item */
+
+.edit-item-button {
+  flex-shrink: 0;
+  background: #174c39;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.edit-item-button:hover {
+  background: #103b2d;
+}
+
+.edit-item-button:focus-visible {
+  outline: 3px solid #ed783f;
+  outline-offset: 3px;
+}
+
+
 .empty-state {
   padding: 48px 20px;
   text-align: center;

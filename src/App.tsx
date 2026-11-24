@@ -3,7 +3,11 @@ import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import AddFoodForm from './components/AddFoodForm'
 import AuthForm from './components/AuthForm'
-import { loadFoodItems, saveFoodItem } from './lib/foodItems'
+import {
+  loadFoodItems,
+  saveFoodItem,
+  updateFoodItem,
+} from './lib/foodItems'
 import { supabase } from './lib/supabase'
 import type {
   FoodItemInput,
@@ -28,7 +32,10 @@ function InventoryApp() {
   const [loadError, setLoadError] = useState('')
   const [signOutError, setSignOutError] = useState('')
   const [page, setPage] =
-    useState<'inventory' | 'add'>('inventory')
+    useState<'inventory' | 'add' | 'edit'>('inventory')
+
+  const [editingItem, setEditingItem] =
+    useState<FoodItemRecord | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -82,6 +89,18 @@ function InventoryApp() {
     void refreshItems()
   }
 
+  async function handleEditSave(item: FoodItemInput) {
+    if (!editingItem) {
+      throw new Error('No food item selected for editing.')
+    }
+
+    await updateFoodItem(editingItem.id, item)
+
+    setEditingItem(null)
+    setPage('inventory')
+    void refreshItems()
+  }
+
   async function handleSignOut() {
     setSignOutError('')
 
@@ -105,7 +124,13 @@ function InventoryApp() {
             Sign out
           </button>
         </div>
-        <h1>{page === 'add' ? 'Add food' : 'Inventory'}</h1>
+        <h1>
+          {page === 'add'
+            ? 'Add food'
+            : page === 'edit'
+              ? 'Edit food'
+              : 'Inventory'}
+        </h1>
       </header>
 
       <main className="app-content">
@@ -115,12 +140,22 @@ function InventoryApp() {
           </p>
         )}
 
-        {page === 'add' ? (
-          <AddFoodForm
-            onSave={handleSave}
-            onCancel={() => setPage('inventory')}
-          />
-        ) : (
+          {page === 'add' ? (
+            <AddFoodForm
+              onSave={handleSave}
+              onCancel={() => setPage('inventory')}
+            />
+          ) : page === 'edit' && editingItem ? (
+            <AddFoodForm
+              key={editingItem.id}
+              initialItem={editingItem}
+              onSave={handleEditSave}
+              onCancel={() => {
+                setEditingItem(null)
+                setPage('inventory')
+              }}
+            />
+          ) : (
           <>
             <div className="inventory-heading">
               <div>
@@ -183,6 +218,17 @@ function InventoryApp() {
                         ? 'item'
                         : 'items'}
                     </span>
+                  <button
+                    type="button"
+                    className="edit-item-button"
+                    aria-label={`Edit ${item.name}`}
+                    onClick={() => {
+                      setEditingItem(item)
+                      setPage('edit')
+                    }}
+                  >
+                    Edit
+                  </button>
                   </li>
                 ))}
               </ul>
